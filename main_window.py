@@ -823,8 +823,10 @@ class MainWindow(QMainWindow):
         Args:
             tasks (list | None): список задач для отображения.
                 None означает «загрузить все задачи из БД».
+                Пустой список [] — валидный результат (ни одной задачи).
         """
-        self._all_tasks = list(tasks or self.db.get_all_tasks())
+        # Явная проверка на None — пустой список [] тоже корректная выборка
+        self._all_tasks = list(self.db.get_all_tasks()) if tasks is None else list(tasks)
         self._apply_filters()
 
     def _apply_filters(self) -> None:

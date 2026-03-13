@@ -196,23 +196,36 @@ class CategoryDialog(QDialog):
         Returns:
             QWidget: контейнер с двумя кнопками.
         """
+        cat_id    = cat["id"]
+        cat_name  = cat["name"]
+        cat_color = cat["color"]
+
         container = QWidget()
+        container.setStyleSheet("background: transparent;")
         layout = QHBoxLayout(container)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(4)
+        layout.setContentsMargins(4, 3, 4, 3)
+        layout.setSpacing(8)
 
         edit_btn = QPushButton("✎")
-        edit_btn.setFixedWidth(30)
-        edit_btn.setProperty("cat_id",    cat["id"])
-        edit_btn.setProperty("cat_name",  cat["name"])
-        edit_btn.setProperty("cat_color", cat["color"])
-        edit_btn.clicked.connect(self._on_edit_click)
+        edit_btn.setFixedSize(32, 32)
+        edit_btn.setStyleSheet(
+            "QPushButton { background: #1A2535; color: #60A5FA; "
+            "border: 1px solid #1E3A5F; border-radius: 6px; font-size: 15px; }"
+            "QPushButton:hover { background: #1E3A5F; color: #93C5FD; }"
+        )
+        # Захватываем значения через лямбду — sender() ненадёжен в cell-виджетах
+        edit_btn.clicked.connect(
+            lambda _, i=cat_id, n=cat_name, c=cat_color: self._on_edit_click(i, n, c)
+        )
 
         del_btn = QPushButton("🗑")
-        del_btn.setFixedWidth(30)
-        del_btn.setStyleSheet("color: #E74C3C;")
-        del_btn.setProperty("cat_id", cat["id"])
-        del_btn.clicked.connect(self._on_delete_click)
+        del_btn.setFixedSize(32, 32)
+        del_btn.setStyleSheet(
+            "QPushButton { background: #1A1520; color: #F87171; "
+            "border: 1px solid #3D1515; border-radius: 6px; }"
+            "QPushButton:hover { background: #3D1515; color: #FCA5A5; }"
+        )
+        del_btn.clicked.connect(lambda _, i=cat_id: self._on_delete_click(i))
 
         layout.addWidget(edit_btn)
         layout.addWidget(del_btn)
@@ -254,17 +267,27 @@ class CategoryDialog(QDialog):
         self.selected_color = PRESET_COLORS[0]
         self._highlight_color(PRESET_COLORS[0])
 
-    def _on_edit_click(self) -> None:
-        """Заполняет форму данными выбранной категории для редактирования."""
-        btn = self.sender()
-        self._edit_id = btn.property("cat_id")
-        self.name_edit.setText(btn.property("cat_name"))
-        self.selected_color = btn.property("cat_color")
-        self._highlight_color(self.selected_color)
+    def _on_edit_click(self, cat_id: int, cat_name: str, cat_color: str) -> None:
+        """
+        Заполняет форму данными выбранной категории для редактирования.
 
-    def _on_delete_click(self) -> None:
-        """Запрашивает подтверждение и удаляет категорию из БД."""
-        cat_id = self.sender().property("cat_id")
+        Args:
+            cat_id (int): идентификатор категории.
+            cat_name (str): текущее название.
+            cat_color (str): текущий цвет.
+        """
+        self._edit_id = cat_id
+        self.name_edit.setText(cat_name)
+        self.selected_color = cat_color
+        self._highlight_color(cat_color)
+
+    def _on_delete_click(self, cat_id: int) -> None:
+        """
+        Запрашивает подтверждение и удаляет категорию из БД.
+
+        Args:
+            cat_id (int): идентификатор удаляемой категории.
+        """
         reply = QMessageBox.question(
             self,
             "Удалить категорию",
