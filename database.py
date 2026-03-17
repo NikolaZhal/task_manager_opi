@@ -34,6 +34,9 @@ class DatabaseManager:
         self.conn = sqlite3.connect(db_path)
         self.conn.row_factory = sqlite3.Row
 
+        # Включаем поддержку внешних ключей (по умолчанию выключена в SQLite)
+        self.conn.execute("PRAGMA foreign_keys = ON")
+
         self._create_tables()
         self._seed_default_categories()
 
